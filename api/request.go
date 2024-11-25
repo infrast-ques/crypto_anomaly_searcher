@@ -5,9 +5,9 @@ import (
 	"strings"
 )
 
-type Request struct {
-	r     http.Request
-	model *any
+type Request[T any] struct {
+	Req   http.Request
+	Model T
 }
 
 func MapToQueryParams(paramsMap map[string]string) string {
@@ -16,10 +16,9 @@ func MapToQueryParams(paramsMap map[string]string) string {
 	}
 
 	var sBuilder = strings.Builder{}
-
 	for p, pVal := range paramsMap {
 		sBuilder.WriteString(p + "=" + pVal + "&")
 	}
-	res := sBuilder.String()
-	return res[:len(res)-1]
+
+	return sBuilder.String()
 }

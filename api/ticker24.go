@@ -17,7 +17,7 @@ var params = map[string]string{
 	"symbol": tickers[0],
 }
 
-var Ticker24Req = http.Request{
+var request = http.Request{
 	Method: "GET",
 	URL: &url.URL{
 		Scheme:   "https",
@@ -26,6 +26,11 @@ var Ticker24Req = http.Request{
 		RawQuery: MapToQueryParams(params),
 	},
 	Close: true,
+}
+
+var Ticker24Req = Request[TickerResp]{
+	Req:   request,
+	Model: TickerResp{},
 }
 
 type TickerResp struct {

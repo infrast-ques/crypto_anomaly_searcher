@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"net/http"
@@ -6,29 +6,35 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-var ApiClientBinance = ApiClient{
+var ClientBinance = client{
 	client:  http.DefaultClient,
 	headers: nil,
 }
 
-type ApiClient struct {
+type client struct {
 	client  *http.Client
 	headers http.Header
 }
 
-func (a ApiClient) Send(r *http.Request) (*http.Response, error) {
-	for key, values := range a.headers {
+func (a client) Send(r *http.Request) (*ResponseWrapper, error) {
+	for key, values := range r.Header {
 		for _, value := range values {
-			r.Header.Add(key, value)
+			a.headers.Set(key, value)
 		}
 	}
+
 	resp, err := a.client.Do(r)
+
+	// todo add request log
+
 	if err != nil {
 		logrus.Warn(err)
-		return resp, err
+		return &ResponseWrapper{Response: resp}, err
 	}
+
 	if resp.StatusCode != http.StatusOK {
 		logrus.Warn("Status code:" + resp.Status)
 	}
-	return resp, nil
+
+	return &ResponseWrapper{Response: resp}, nil
 }
