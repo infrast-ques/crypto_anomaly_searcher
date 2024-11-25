@@ -13,10 +13,11 @@ func main() {
 	resp, err := api.ClientBinance.Send(&api.Ticker24Req.Req)
 
 	if err != nil {
-		logrus.Error("Request error")
+		logrus.Error("Request error", err)
 	}
 	tickerResp := api.TickerResp{}
-	resp.Deserialize(&tickerResp) // перенести десериализацию сразу в send
+	// todo перенести десериализацию сразу в send
+	resp.Deserialize(&tickerResp)
 	json, _ := utils.Serialize(tickerResp)
 	fmt.Println(json)
 }
