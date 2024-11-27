@@ -1,14 +1,14 @@
 package api
 
 import (
-	"net/http"
 	"strings"
 )
 
-type Request[T any] struct {
-	Req   http.Request
-	Model T
-}
+const (
+	binanceHost         = "api.binance.com"
+	tickers24hrEndpoint = "/api/v3/ticker/24hr"
+	tickersEndpoint     = "/api/v3/ticker"
+)
 
 func MapToQueryParams(paramsMap map[string]string) string {
 	if len(paramsMap) == 0 {
@@ -21,4 +21,8 @@ func MapToQueryParams(paramsMap map[string]string) string {
 	}
 
 	return sBuilder.String()
+}
+
+func AsQueryParamList(list []string) string {
+	return "[\"" + strings.Join(list, "\",\"") + "\"]"
 }
