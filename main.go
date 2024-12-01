@@ -1,7 +1,8 @@
 package main
 
-import "crypto_anomaly_searcher/service"
+import "crypto_anomaly_searcher/my_service"
 
 func main() {
-	service.GetData()
+	data := my_service.GetCryptoData()
+	my_service.WriteData(my_service.ToSheetData(data))
 }

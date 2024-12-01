@@ -2,6 +2,7 @@ package api
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/sirupsen/logrus"
@@ -23,6 +24,8 @@ func (a client) Send(r *http.Request) *http.Response {
 			a.headers.Set(key, value)
 		}
 	}
+
+	logrus.Info(fmt.Sprintf("Request - %s: %s \n%s", r.Method, r.URL, r.Body))
 
 	resp, err := a.client.Do(r)
 	// todo add request log
