@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 )
@@ -39,4 +40,21 @@ func Deserialize[T any](r *http.Response, model T) T {
 	}
 
 	return model
+}
+
+func MapToQueryParams(paramsMap map[string]string) string {
+	if len(paramsMap) == 0 {
+		return ""
+	}
+
+	var sBuilder = strings.Builder{}
+	for p, pVal := range paramsMap {
+		sBuilder.WriteString(p + "=" + pVal + "&")
+	}
+
+	return sBuilder.String()
+}
+
+func AsQueryParamList(list []string) string {
+	return "[\"" + strings.Join(list, "\",\"") + "\"]"
 }

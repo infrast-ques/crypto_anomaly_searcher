@@ -8,15 +8,15 @@ import (
 	"crypto_anomaly_searcher/utils"
 )
 
-func getTickerRequest(tickers []string, windowSize constants.WindowSize) http.Request {
+func tickerRequest(tickers []string, windowSize constants.WindowSize) http.Request {
 	return http.Request{
 		Method: "GET",
 		URL: &url.URL{
 			Scheme: "https",
 			Host:   binanceHost,
 			Path:   tickersEndpoint,
-			RawQuery: MapToQueryParams(map[string]string{
-				"symbols":    AsQueryParamList(tickers),
+			RawQuery: utils.MapToQueryParams(map[string]string{
+				"symbols":    utils.AsQueryParamList(tickers),
 				"windowSize": string(windowSize),
 			}),
 		},
@@ -24,7 +24,7 @@ func getTickerRequest(tickers []string, windowSize constants.WindowSize) http.Re
 	}
 }
 
-type tickerResp struct {
+type TickerResp struct {
 	Symbol             string `json:"symbol"`
 	PriceChange        string `json:"priceChange"`
 	PriceChangePercent string `json:"priceChangePercent"`
@@ -32,8 +32,10 @@ type tickerResp struct {
 	QuoteVolume        string `json:"quoteVolume"`
 }
 
-func GetTickersData(tickers []string) []tickerResp {
-	request := getTickerRequest(tickers, constants.M30)
+type TickerPespList []TickerResp
+
+func GetTickersData(tickers []string) TickerPespList {
+	request := tickerRequest(tickers, constants.M30)
 	response := clientBinance.Send(&request)
-	return utils.Deserialize(response, []tickerResp{})
+	return utils.Deserialize(response, TickerPespList{})
 }
