@@ -15,6 +15,7 @@ import (
 var (
 	jsonKeyPath = "google_sheets_key.json"
 	ssId        = "1z4eXjtP9WwKpyh4I_FZbBue3_Az2WPo18XZnGMTQsRk"
+	srv         = getSheets()
 )
 
 func getSheets() *sheets.Service {
@@ -31,38 +32,58 @@ type sheetTemplate struct {
 	PriceChange string
 }
 
-func WriteData(data []sheetTemplate) {
-	srv := getSheets()
-	var valueRange sheets.ValueRange
-	valueRange.Values = append(valueRange.Values, []interface{}{"Ticker", "Volume", "Price Change"})
-	srv.Spreadsheets.Values.Update(ssId, "A1", &valueRange).ValueInputOption("RAW").Do()
-
-	for i, datum := range data {
-		var valueRange sheets.ValueRange
-		valueRange.Values = append(valueRange.Values, []interface{}{datum.Ticker, datum.Volume, datum.PriceChange})
-		srv.Spreadsheets.Values.
-			Update(ssId, fmt.Sprintf("A%d", i+2), &valueRange).
-			ValueInputOption("USER_ENTERED").
-			Do()
+func ClearSheet() {
+	_, err := srv.Spreadsheets.Values.Clear(ssId, "A1:C10000", &sheets.ClearValuesRequest{}).Do()
+	if err != nil {
+		logrus.Errorf("Unable to clear data table: %v", err)
 	}
 }
 
-func ToSheetData(t api.TickerPespList) []sheetTemplate {
+func WriteData(data []sheetTemplate) {
+	var values [][]interface{}
+	values = append(values, []interface{}{"Ticker", "Volume", "Price Change"})
+
+	for _, datum := range data {
+		values = append(values, []interface{}{datum.Ticker, datum.Volume, datum.PriceChange})
+	}
+	valueRange := sheets.ValueRange{
+		Values: values,
+	}
+
+	_, err := srv.Spreadsheets.Values.
+		Update(ssId, "A1", &valueRange).
+		ValueInputOption("USER_ENTERED").
+		Do()
+	if err != nil {
+		logrus.Errorf("Unable to write data to sheet: %v", err)
+	}
+}
+
+func ToSheetData(t api.TickerRespList) []sheetTemplate {
 	var res []sheetTemplate
 	for _, tData := range t {
-		volume, err := strconv.ParseFloat(tData.Volume, 64)
-		if err != nil {
-			logrus.Error("Parse ticker volume value error: ", err)
+		volume, errV := strconv.ParseFloat(tData.Volume, 64)
+		if errV != nil {
+			logrus.Error("Parse ticker volume value error: ", errV)
 		}
-		priceChange, err := strconv.ParseFloat(tData.PriceChangePercent, 64)
-		if err != nil {
-			logrus.Error("Parse ticker price change value error: ", err)
+		if volume == 0.0 {
+			continue
 		}
+
+		priceChange, errPr := strconv.ParseFloat(tData.PriceChangePercent, 64)
+		if errPr != nil {
+			logrus.Error("Parse ticker price change value error: ", errPr)
+		}
+		if priceChange == 0.0 {
+			continue
+		}
+
 		template := sheetTemplate{
 			Ticker:      tData.Symbol,
 			Volume:      strings.Replace(fmt.Sprintf("%.2f", volume), ".", ",", 1),
 			PriceChange: strings.Replace(fmt.Sprintf("%.2f", priceChange), ".", ",", 1),
 		}
+
 		res = append(res, template)
 	}
 
