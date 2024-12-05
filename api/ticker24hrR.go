@@ -19,6 +19,7 @@ var ticker24hrR = http.Request{
 
 type ticker24hrResp struct {
 	Symbol string `json:"symbol"`
+	Count  int    `json:"count"`
 }
 
 func GetAllTickers() []string {
@@ -29,7 +30,9 @@ func GetAllTickers() []string {
 	var tickers []string
 
 	for _, resp := range ticker24hr {
-		tickers = append(tickers, resp.Symbol)
+		if resp.Count > 0 {
+			tickers = append(tickers, resp.Symbol)
+		}
 	}
 
 	return tickers

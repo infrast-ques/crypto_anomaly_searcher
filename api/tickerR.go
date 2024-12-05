@@ -32,10 +32,10 @@ type TickerResp struct {
 	QuoteVolume        string `json:"quoteVolume"`
 }
 
-type TickerPespList []TickerResp
+type TickerRespList []TickerResp
 
-func GetTickersData(tickers []string) TickerPespList {
-	request := tickerRequest(tickers, constants.M30)
+func GetTickersData(tickers []string, period constants.WindowSize) TickerRespList {
+	request := tickerRequest(tickers, period)
 	response := clientBinance.Send(&request)
-	return utils.Deserialize(response, TickerPespList{})
+	return utils.Deserialize(response, TickerRespList{})
 }

@@ -28,7 +28,7 @@ func Deserialize[T any](r *http.Response, model T) T {
 	}(r.Body)
 
 	responseBytes, err := io.ReadAll(r.Body)
-	logrus.Info("Response body - " + string(responseBytes))
+	// todo logrus.Info("Response body - " + string(responseBytes))
 
 	if err != nil {
 		logrus.Error(errors.New("ReadAll Body - " + err.Error()))
@@ -57,4 +57,25 @@ func MapToQueryParams(paramsMap map[string]string) string {
 
 func AsQueryParamList(list []string) string {
 	return "[\"" + strings.Join(list, "\",\"") + "\"]"
+}
+
+// Flatten todo допилить
+func Flatten[T [][]interface{}](lists T) []interface{} {
+	var res []interface{}
+	for _, list := range lists {
+		for _, item := range list {
+			res = append(res, item)
+		}
+	}
+	return res
+}
+
+func SliceFilter(tickers []string, predicate func(string) bool) []string {
+	var res []string
+	for _, ticker := range tickers {
+		if predicate(ticker) {
+			res = append(res, ticker)
+		}
+	}
+	return res
 }
