@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"crypto_anomaly_searcher/api"
+	"crypto_anomaly_searcher/my_service/dto"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/api/option"
 	"google.golang.org/api/sheets/v4"
@@ -27,9 +27,11 @@ func getSheets() *sheets.Service {
 }
 
 type sheetTemplate struct {
-	Ticker      string
-	Volume      string
-	PriceChange string
+	Ticker    string
+	Volume15m string
+	Volume2h  string
+	Volume1d  string
+	// PriceChange string
 }
 
 func ClearSheet() {
@@ -41,10 +43,16 @@ func ClearSheet() {
 
 func WriteData(data []sheetTemplate) {
 	var values [][]interface{}
-	values = append(values, []interface{}{"Ticker", "Volume", "Price Change"})
+	values = append(values, []interface{}{"Ticker", "Volume15m", "Volume2h", "Volume1d"})
 
 	for _, datum := range data {
-		values = append(values, []interface{}{datum.Ticker, datum.Volume, datum.PriceChange})
+		values = append(values, []interface{}{
+			datum.Ticker,
+			datum.Volume15m,
+			datum.Volume2h,
+			datum.Volume1d,
+			// datum.PriceChange,
+		})
 	}
 	valueRange := sheets.ValueRange{
 		Values: values,
@@ -59,29 +67,45 @@ func WriteData(data []sheetTemplate) {
 	}
 }
 
-func ToSheetData(t api.TickerRespList) []sheetTemplate {
+func ToSheetData(t dto.TickerDataList) []sheetTemplate {
 	var res []sheetTemplate
 	for _, tData := range t {
-		volume, errV := strconv.ParseFloat(tData.Volume, 64)
+		volume15m, errV := strconv.ParseFloat(tData.Volume15m, 64)
 		if errV != nil {
 			logrus.Error("Parse ticker volume value error: ", errV)
 		}
-		if volume == 0.0 {
+		if volume15m == 0.0 {
+			continue
+		}
+		volume2h, errV := strconv.ParseFloat(tData.Volume2h, 64)
+		if errV != nil {
+			logrus.Error("Parse ticker volume value error: ", errV)
+		}
+		if volume2h == 0.0 {
+			continue
+		}
+		volume1d, errV := strconv.ParseFloat(tData.Volume1d, 64)
+		if errV != nil {
+			logrus.Error("Parse ticker volume value error: ", errV)
+		}
+		if volume1d == 0.0 {
 			continue
 		}
 
-		priceChange, errPr := strconv.ParseFloat(tData.PriceChangePercent, 64)
-		if errPr != nil {
-			logrus.Error("Parse ticker price change value error: ", errPr)
-		}
-		if priceChange == 0.0 {
-			continue
-		}
+		// priceChange, errPr := strconv.ParseFloat(tData.PriceChangePercent, 64)
+		// if errPr != nil {
+		// 	logrus.Error("Parse ticker price change value error: ", errPr)
+		// }
+		// if priceChange == 0.0 {
+		// 	continue
+		// }
 
 		template := sheetTemplate{
-			Ticker:      tData.Symbol,
-			Volume:      strings.Replace(fmt.Sprintf("%.2f", volume), ".", ",", 1),
-			PriceChange: strings.Replace(fmt.Sprintf("%.2f", priceChange), ".", ",", 1),
+			Ticker:    tData.Symbol,
+			Volume15m: strings.Replace(fmt.Sprintf("%.2f", volume15m), ".", ",", 1),
+			Volume2h:  strings.Replace(fmt.Sprintf("%.2f", volume2h), ".", ",", 1),
+			Volume1d:  strings.Replace(fmt.Sprintf("%.2f", volume1d), ".", ",", 1),
+			// PriceChange: strings.Replace(fmt.Sprintf("%.2f", priceChange), ".", ",", 1),
 		}
 
 		res = append(res, template)
