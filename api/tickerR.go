@@ -32,6 +32,11 @@ type TickerResp struct {
 	QuoteVolume        string `json:"quoteVolume"`
 }
 
+type TickersToWindowSizeResp struct {
+	TickerRespList TickerRespList
+	WindowSize     constants.WindowSize
+}
+
 type TickerRespList []TickerResp
 
 func GetTickersData(tickers []string, period constants.WindowSize) TickerRespList {

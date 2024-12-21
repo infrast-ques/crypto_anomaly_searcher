@@ -5,35 +5,62 @@ import (
 
 	"crypto_anomaly_searcher/api"
 	"crypto_anomaly_searcher/api/constants"
+	"crypto_anomaly_searcher/my_service/dto"
 	"crypto_anomaly_searcher/utils"
 	"github.com/sirupsen/logrus"
 )
 
-func AggregateData() api.TickerRespList {
-	tickersParts := getTickersParts()
+func AggregateData() dto.TickerDataList {
+	tickersParts := getTickerList()
+	tickersRespLists := collectTickerData(tickersParts)
+	res := mergeTickersData(tickersRespLists)
+	return res
+}
+
+func collectTickerData(tickersParts [][]string) []api.TickersToWindowSizeResp {
+	var tickersRespLists []api.TickersToWindowSizeResp
 	// todo тут можно горутины воткнуть
-	res1h := getTickersData(tickersParts, constants.H1)
-	// res2h := getTickersData(tickersParts, constants.H2)
-	// res1d := getTickersData(tickersParts, constants.D1)
-	// res7d := getTickersData(tickersParts, constants.D7)
-
-	return res1h
+	for _, size := range []constants.WindowSize{constants.M15, constants.H2, constants.D1} {
+		tickersRespLists = append(
+			tickersRespLists,
+			api.TickersToWindowSizeResp{
+				TickerRespList: getTickersData(tickersParts, size),
+				WindowSize:     size,
+			},
+		)
+	}
+	return tickersRespLists
 }
 
-func compute() {
-
+func mergeTickersData(tickerDataLists []api.TickersToWindowSizeResp) dto.TickerDataList {
+	var resultTickerDataList []dto.TickerWinSizeVol
+	for _, tickerDataList := range tickerDataLists {
+		for _, tickerData := range tickerDataList.TickerRespList {
+			hui := dto.TickerWinSizeVol{
+				Ticker:     tickerData.Symbol,
+				WindowSize: tickerDataList.WindowSize,
+				Volume:     tickerData.Volume,
+			}
+			resultTickerDataList = append(resultTickerDataList, hui)
+		}
+	}
+	var mergeResult dto.TickerDataList
+	for _, v := range resultTickerDataList {
+		mergeResult.SetTickerData(v)
+	}
+	return mergeResult
 }
 
-func getTickersParts() [][]string {
+func getTickerList() [][]string {
 	tickers := api.GetAllTickers()
-	filteredTickers := tickersFilter(tickers)
+	filteredTickers := tickersFilter(tickers)[0:2]
 	var tickersParts [][]string
-	for i := 0; i < len(filteredTickers); i += 100 {
-		end := i + 100
+	for start := 0; start < len(filteredTickers); start += 100 {
+		end := start + 100
 		if end > len(filteredTickers) {
 			end = len(filteredTickers)
 		}
-		tickersParts = append(tickersParts, filteredTickers[i:end])
+		tickersParts = append(tickersParts, filteredTickers[start:end])
 	}
 	return tickersParts
 }
