@@ -3,6 +3,7 @@ package utils
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -78,4 +79,20 @@ func SliceFilter(tickers []string, predicate func(string) bool) []string {
 		}
 	}
 	return res
+}
+
+func FloatToStrFmt(number float64) string {
+	return strings.Replace(fmt.Sprintf("%.2f", number), ".", ",", 1)
+}
+
+func StrListToStr(anyList []string) string {
+	var sb strings.Builder
+	for _, s := range anyList {
+		sb.WriteString(fmt.Sprintf("%s\n", s))
+	}
+	return sb.String()
+}
+
+func tickerToLink(ticker string) string {
+	return "<a href=\"https://example.com\">"
 }

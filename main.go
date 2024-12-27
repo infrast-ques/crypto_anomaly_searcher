@@ -1,9 +1,14 @@
 package main
 
-import "crypto_anomaly_searcher/my_service"
+import (
+	"crypto_anomaly_searcher/service"
+)
 
 func main() {
-	data := my_service.AggregateData()
-	my_service.ClearSheet()
-	my_service.WriteData(my_service.ToSheetData(data))
+	data := service.AggregateData()
+	service.ClearSheet()
+	service.WriteData(data)
+
+	// bot := telegram.InitTgBot()
+	// telegram.SendToUsers(utils.StrListToStr(data), bot)
 }

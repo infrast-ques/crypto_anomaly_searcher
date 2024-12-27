@@ -1,23 +1,37 @@
-package my_service
+package service
 
 import (
+	"errors"
+	"fmt"
 	"strings"
 
 	"crypto_anomaly_searcher/api"
 	"crypto_anomaly_searcher/api/constants"
-	"crypto_anomaly_searcher/my_service/dto"
+	"crypto_anomaly_searcher/service/dto"
 	"crypto_anomaly_searcher/utils"
 	"github.com/sirupsen/logrus"
 )
 
 func AggregateData() dto.TickerDataList {
-	tickersParts := getTickerList()
-	tickersRespLists := collectTickerData(tickersParts)
-	res := mergeTickersData(tickersRespLists)
+	tickers, _ := getTickerList()
+	tickerDataLists := collectTickersData(tickers)
+	datas := mergeTickersData(tickerDataLists)
+	strFmtComputedData(datas)
+	return datas
+}
+
+func strFmtComputedData(data dto.TickerDataList) []string {
+	res := []string{"ticker\t15m/2h\t2h/24h\t15m%\t2h%\t1d%"}
+	for _, d := range data {
+		res = append(res, compute(d))
+	}
+	for _, re := range res {
+		fmt.Println(re)
+	}
 	return res
 }
 
-func collectTickerData(tickersParts [][]string) []api.TickersToWindowSizeResp {
+func collectTickersData(tickersParts [][]string) []api.TickersToWindowSizeResp {
 	var tickersRespLists []api.TickersToWindowSizeResp
 	// todo тут можно горутины воткнуть
 	for _, size := range []constants.WindowSize{constants.M15, constants.H2, constants.D1} {
@@ -37,9 +51,10 @@ func mergeTickersData(tickerDataLists []api.TickersToWindowSizeResp) dto.TickerD
 	for _, tickerDataList := range tickerDataLists {
 		for _, tickerData := range tickerDataList.TickerRespList {
 			hui := dto.TickerWinSizeVol{
-				Ticker:     tickerData.Symbol,
-				WindowSize: tickerDataList.WindowSize,
-				Volume:     tickerData.Volume,
+				Ticker:             tickerData.Ticker,
+				WindowSize:         tickerDataList.WindowSize,
+				Volume:             tickerData.Volume,
+				PriceChangePercent: tickerData.PriceChangePercent,
 			}
 			resultTickerDataList = append(resultTickerDataList, hui)
 		}
@@ -51,18 +66,23 @@ func mergeTickersData(tickerDataLists []api.TickersToWindowSizeResp) dto.TickerD
 	return mergeResult
 }
 
-func getTickerList() [][]string {
-	tickers := api.GetAllTickers()
-	filteredTickers := tickersFilter(tickers)[0:2]
-	var tickersParts [][]string
+func getTickerList() ([][]string, error) {
+	allTickers := api.GetAllTickers()
+	if len(allTickers) == 0 {
+		error := errors.New("zero tickers in response")
+		logrus.Error(error)
+		return nil, error
+	}
+	filteredTickers := tickersFilter(allTickers) // [0:2] // todo для дебага, чтобы не запрашивать данные по всем инструментам
+	var tickers [][]string
 	for start := 0; start < len(filteredTickers); start += 100 {
 		end := start + 100
 		if end > len(filteredTickers) {
 			end = len(filteredTickers)
 		}
-		tickersParts = append(tickersParts, filteredTickers[start:end])
+		tickers = append(tickers, filteredTickers[start:end])
 	}
-	return tickersParts
+	return tickers, nil
 }
 
 func tickersFilter(tickers []string) []string {
