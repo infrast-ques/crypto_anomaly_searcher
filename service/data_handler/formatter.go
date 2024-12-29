@@ -27,10 +27,10 @@ func MergeTickersData(tickerDataLists []api.TickersToWSizeResp) dto.TickerRawDat
 	for _, tickerDataList := range tickerDataLists {
 		for _, tickerData := range tickerDataList.TickerRespList {
 			hui := dto.TickerVolByWSize{
-				Ticker:      tickerData.Ticker,
-				WSize:       tickerDataList.WSize,
-				Vol:         tickerData.Vol,
-				PrChngPrcnt: tickerData.PrChangePercent,
+				Ticker:       tickerData.Ticker,
+				WSize:        tickerDataList.WSize,
+				Vol:          tickerData.Vol,
+				PrcChngPrcnt: tickerData.PrChangePercent,
 			}
 			resultTickerDataList = append(resultTickerDataList, hui)
 		}

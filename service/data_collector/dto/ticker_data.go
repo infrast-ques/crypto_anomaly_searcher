@@ -32,10 +32,10 @@ func (t TickerRawData) toString() string {
 type TickerRawDataList []TickerRawData
 
 type TickerVolByWSize struct {
-	Ticker      string
-	WSize       constants.WindowSize
-	Vol         float64
-	PrChngPrcnt float64
+	Ticker       string
+	WSize        constants.WindowSize
+	Vol          float64
+	PrcChngPrcnt float64
 }
 
 func (ts *TickerRawDataList) ToStringList() []string {
@@ -76,13 +76,13 @@ func (ts *TickerRawDataList) SetTickerData(data TickerVolByWSize) *TickerRawData
 			switch data.WSize {
 			case constants.M15:
 				resTickerData.Vol15m = data.Vol
-				resTickerData.PrcChngPrcnt15m = data.PrChngPrcnt
+				resTickerData.PrcChngPrcnt15m = data.PrcChngPrcnt
 			case constants.H2:
 				resTickerData.Vol2h = data.Vol
-				resTickerData.PrcChngPrcnt2h = data.PrChngPrcnt
+				resTickerData.PrcChngPrcnt2h = data.PrcChngPrcnt
 			case constants.D1:
 				resTickerData.Vol1d = data.Vol
-				resTickerData.PrcChngPrcnt1d = data.PrChngPrcnt
+				resTickerData.PrcChngPrcnt1d = data.PrcChngPrcnt
 			}
 			(*ts)[i] = resTickerData
 			break

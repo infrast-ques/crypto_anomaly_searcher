@@ -26,7 +26,7 @@ func getSheets() *sheets.Service {
 }
 
 func FillSheet(ssIds []string, sheetName string, s []string) {
-	checkAndCreateList(ssIds, sheetName)
+	checkAndCreateSheet(ssIds, sheetName)
 	clearData(ssIds, sheetName)
 	writeStrList(ssIds, sheetName, s)
 }
@@ -72,7 +72,7 @@ func writeStrList(ssIds []string, sheetNum string, s []string) {
 	}
 }
 
-func checkAndCreateList(ssIds []string, sheetName string) {
+func checkAndCreateSheet(ssIds []string, sheetName string) {
 	_sheetName := strings.TrimSuffix(sheetName, "!")
 	for _, ssId := range ssIds {
 		if !sheetExists(ssId, _sheetName) {
