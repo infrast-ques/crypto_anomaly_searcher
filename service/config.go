@@ -9,8 +9,9 @@ import (
 
 var ConfigData = initConfig()
 
-type ConfigModel struct {
+type ConfigM struct {
 	Telegram telegramConfig `yaml:"telegram"`
+	Sheet    sheetConfig    `yaml:"sheet"`
 }
 
 type telegramConfig struct {
@@ -18,14 +19,23 @@ type telegramConfig struct {
 	TestUserId int64  `yaml:"test-user-id"`
 }
 
-func initConfig() ConfigModel {
+type sheetConfig struct {
+	Raw       sheetData `yaml:"raw-data"`
+	Computed1 sheetData `yaml:"computed1"`
+}
+
+type sheetData struct {
+	SsIds []string `yaml:"ss-ids"`
+}
+
+func initConfig() ConfigM {
 	file, err := os.Open("config.yml")
 	if err != nil {
 		log.Fatalf("Open file with error: %v", err)
 	}
 	defer file.Close()
 
-	var config ConfigModel
+	var config ConfigM
 	if err := yaml.NewDecoder(file).Decode(&config); err != nil {
 		log.Fatalf("Decode error YAML: %v", err)
 	}

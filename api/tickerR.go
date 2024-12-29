@@ -35,19 +35,18 @@ type tickerResp struct {
 }
 
 type TickerResp struct {
-	Ticker             string
-	PriceChange        float64
-	PriceChangePercent float64
-	Volume             float64
-	QuoteVolume        float64
+	Ticker          string
+	PrChange        float64
+	PrChangePercent float64
+	Vol             float64
+	QuoteVol        float64
 }
-
-type TickersToWindowSizeResp struct {
-	TickerRespList TickerRespList
-	WindowSize     constants.WindowSize
-}
-
 type TickerRespList []TickerResp
+
+type TickersToWSizeResp struct {
+	TickerRespList TickerRespList
+	WSize          constants.WindowSize
+}
 
 func GetTickersData(tickers []string, period constants.WindowSize) TickerRespList {
 	request := tickerRequest(tickers, period)
@@ -55,35 +54,36 @@ func GetTickersData(tickers []string, period constants.WindowSize) TickerRespLis
 	stringModel := utils.Deserialize(response, []tickerResp{})
 	res := TickerRespList{}
 	for _, data := range stringModel {
-		priceChange, errPC := strconv.ParseFloat(data.PriceChange, 64)
-		if errPC != nil {
-			logrus.Error(errPC)
-		}
-		priceChangePercent, errPCP := strconv.ParseFloat(data.PriceChangePercent, 64)
-		if errPCP != nil {
-			logrus.Error(errPCP)
-		}
-		volume, errV := strconv.ParseFloat(data.Volume, 64)
-		if errV != nil {
-			logrus.Error(errV)
-		}
+		priceChange := stringToFloat(data.PriceChange)
+		priceChangePercent := stringToFloat(data.PriceChangePercent)
+
+		volume := stringToFloat(data.Volume)
 		if volume == 0.0 {
 			logrus.Infof("Ticker %s with zero volume", data.Symbol)
+			continue
 		}
-		quoteVolume, errQV := strconv.ParseFloat(data.QuoteVolume, 64)
-		if errQV != nil {
-			logrus.Error(errQV)
-		}
+
+		quoteVolume := stringToFloat(data.QuoteVolume)
 		if quoteVolume == 0.0 {
 			logrus.Infof("Ticker %s with zero quoteVolume", data.Symbol)
+			continue
 		}
+
 		res = append(res, TickerResp{
-			Ticker:             data.Symbol,
-			PriceChange:        priceChange,
-			PriceChangePercent: priceChangePercent,
-			Volume:             volume,
-			QuoteVolume:        quoteVolume,
+			Ticker:          data.Symbol,
+			PrChange:        priceChange,
+			PrChangePercent: priceChangePercent,
+			Vol:             volume,
+			QuoteVol:        quoteVolume,
 		})
+	}
+	return res
+}
+
+func stringToFloat(v string) float64 {
+	res, err := strconv.ParseFloat(v, 64)
+	if err != nil {
+		logrus.Error(err)
 	}
 	return res
 }
