@@ -3,9 +3,11 @@ package api
 import (
 	"net/http"
 	"net/url"
+	"strconv"
 
 	"crypto_anomaly_searcher/api/constants"
 	"crypto_anomaly_searcher/utils"
+	"github.com/sirupsen/logrus"
 )
 
 func tickerRequest(tickers []string, windowSize constants.WindowSize) http.Request {
@@ -24,7 +26,7 @@ func tickerRequest(tickers []string, windowSize constants.WindowSize) http.Reque
 	}
 }
 
-type TickerResp struct {
+type tickerResp struct {
 	Symbol             string `json:"symbol"`
 	PriceChange        string `json:"priceChange"`
 	PriceChangePercent string `json:"priceChangePercent"`
@@ -32,15 +34,56 @@ type TickerResp struct {
 	QuoteVolume        string `json:"quoteVolume"`
 }
 
-type TickersToWindowSizeResp struct {
-	TickerRespList TickerRespList
-	WindowSize     constants.WindowSize
+type TickerResp struct {
+	Ticker          string
+	PrChange        float64
+	PrChangePercent float64
+	Vol             float64
+	QuoteVol        float64
 }
-
 type TickerRespList []TickerResp
+
+type TickersToWSizeResp struct {
+	TickerRespList TickerRespList
+	WSize          constants.WindowSize
+}
 
 func GetTickersData(tickers []string, period constants.WindowSize) TickerRespList {
 	request := tickerRequest(tickers, period)
 	response := clientBinance.Send(&request)
-	return utils.Deserialize(response, TickerRespList{})
+	stringModel := utils.Deserialize(response, []tickerResp{})
+	res := TickerRespList{}
+	for _, data := range stringModel {
+		priceChange := stringToFloat(data.PriceChange)
+		priceChangePercent := stringToFloat(data.PriceChangePercent)
+
+		volume := stringToFloat(data.Volume)
+		if volume == 0.0 {
+			logrus.Infof("Ticker %s with zero volume", data.Symbol)
+			continue
+		}
+
+		quoteVolume := stringToFloat(data.QuoteVolume)
+		if quoteVolume == 0.0 {
+			logrus.Infof("Ticker %s with zero quoteVolume", data.Symbol)
+			continue
+		}
+
+		res = append(res, TickerResp{
+			Ticker:          data.Symbol,
+			PrChange:        priceChange,
+			PrChangePercent: priceChangePercent,
+			Vol:             volume,
+			QuoteVol:        quoteVolume,
+		})
+	}
+	return res
+}
+
+func stringToFloat(v string) float64 {
+	res, err := strconv.ParseFloat(v, 64)
+	if err != nil {
+		logrus.Error(err)
+	}
+	return res
 }
