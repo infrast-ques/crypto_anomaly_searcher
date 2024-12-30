@@ -3,13 +3,15 @@ package scheduler
 import (
 	"time"
 
-	"github.com/sirupsen/logrus"
+	"crypto_anomaly_searcher/common"
+	"crypto_anomaly_searcher/service"
 )
 
 func ScheduleTask(task func()) {
-	logrus.Info("Execute task")
+	service.Logger.Info("Execute task")
+	config := common.ConfigData.Sheet
 	task()
-	ticker := time.NewTicker(10 * time.Minute)
+	ticker := time.NewTicker(time.Duration(config.UpdateTime) * time.Minute)
 	defer ticker.Stop()
 
 	done := make(chan bool)
@@ -18,7 +20,7 @@ func ScheduleTask(task func()) {
 		for {
 			select {
 			case <-ticker.C:
-				logrus.Info("Execute task")
+				service.Logger.Info("Execute task")
 				task()
 			case <-done:
 				return
@@ -26,7 +28,7 @@ func ScheduleTask(task func()) {
 		}
 	}()
 
-	time.Sleep(30 * time.Minute)
+	time.Sleep(240 * time.Hour)
 	done <- true
-	logrus.Info("Stop scheduler")
+	service.Logger.Info("Stop scheduler")
 }

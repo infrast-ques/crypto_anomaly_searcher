@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"crypto_anomaly_searcher/api/constants"
-	"crypto_anomaly_searcher/service"
+	"crypto_anomaly_searcher/common"
 	"crypto_anomaly_searcher/utils"
 )
 
@@ -20,12 +20,12 @@ type TickerRawData struct {
 }
 
 func (t TickerRawData) toString() string {
-	return t.Ticker + service.SheetSplitter +
-		utils.FloatToStrFmt(t.Vol15m) + service.SheetSplitter +
-		utils.FloatToStrFmt(t.Vol2h) + service.SheetSplitter +
-		utils.FloatToStrFmt(t.Vol1d) + service.SheetSplitter +
-		utils.FloatToStrFmt(t.PrcChngPrcnt15m) + service.SheetSplitter +
-		utils.FloatToStrFmt(t.PrcChngPrcnt2h) + service.SheetSplitter +
+	return t.Ticker + common.SheetSplitter +
+		utils.FloatToStrFmt(t.Vol15m) + common.SheetSplitter +
+		utils.FloatToStrFmt(t.Vol2h) + common.SheetSplitter +
+		utils.FloatToStrFmt(t.Vol1d) + common.SheetSplitter +
+		utils.FloatToStrFmt(t.PrcChngPrcnt15m) + common.SheetSplitter +
+		utils.FloatToStrFmt(t.PrcChngPrcnt2h) + common.SheetSplitter +
 		utils.FloatToStrFmt(t.PrcChngPrcnt1d)
 }
 
@@ -44,7 +44,7 @@ func (ts *TickerRawDataList) ToStringList() []string {
 	for i := 0; i < r.NumField(); i++ {
 		columnNames = append(columnNames, r.Field(i).Name)
 	}
-	result := []string{strings.Join(columnNames, service.SheetSplitter)}
+	result := []string{strings.Join(columnNames, common.SheetSplitter)}
 
 	for _, data := range *ts {
 		result = append(result, data.toString())

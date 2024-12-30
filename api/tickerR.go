@@ -6,8 +6,8 @@ import (
 	"strconv"
 
 	"crypto_anomaly_searcher/api/constants"
+	"crypto_anomaly_searcher/service"
 	"crypto_anomaly_searcher/utils"
-	"github.com/sirupsen/logrus"
 )
 
 func tickerRequest(tickers []string, windowSize constants.WindowSize) http.Request {
@@ -59,13 +59,13 @@ func GetTickersData(tickers []string, period constants.WindowSize) TickerRespLis
 
 		volume := stringToFloat(data.Volume)
 		if volume == 0.0 {
-			logrus.Infof("Ticker %s with zero volume", data.Symbol)
+			service.Logger.Infof("Ticker %s with zero volume", data.Symbol)
 			continue
 		}
 
 		quoteVolume := stringToFloat(data.QuoteVolume)
 		if quoteVolume == 0.0 {
-			logrus.Infof("Ticker %s with zero quoteVolume", data.Symbol)
+			service.Logger.Infof("Ticker %s with zero quoteVolume", data.Symbol)
 			continue
 		}
 
@@ -83,7 +83,7 @@ func GetTickersData(tickers []string, period constants.WindowSize) TickerRespLis
 func stringToFloat(v string) float64 {
 	res, err := strconv.ParseFloat(v, 64)
 	if err != nil {
-		logrus.Error(err)
+		service.Logger.Error(err)
 	}
 	return res
 }

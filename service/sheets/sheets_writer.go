@@ -2,12 +2,11 @@ package sheets
 
 import (
 	"context"
-	"log"
 	"strings"
 
+	"crypto_anomaly_searcher/common"
 	"crypto_anomaly_searcher/service"
 	"crypto_anomaly_searcher/utils"
-	"github.com/sirupsen/logrus"
 	"google.golang.org/api/option"
 	"google.golang.org/api/sheets/v4"
 )
@@ -20,7 +19,7 @@ var (
 func getSheets() *sheets.Service {
 	srv, err := sheets.NewService(context.Background(), option.WithCredentialsFile(jsonKeyPath))
 	if err != nil {
-		logrus.Error(err)
+		service.Logger.Error(err)
 	}
 	return srv
 }
@@ -35,9 +34,9 @@ func clearData(ssIds []string, sheetNum string) {
 	for _, ssId := range ssIds {
 		_, err := srv.Spreadsheets.Values.Clear(ssId, sheetNum+"A1:N10000", &sheets.ClearValuesRequest{}).Do()
 		if err != nil {
-			logrus.Errorf("Unable to clearData data table: %v", err)
+			service.Logger.Errorf("Unable to clearData data table: %v", err)
 		} else {
-			logrus.Infof("Clean sheetName %s,ssId %s", sheetNum, ssId)
+			service.Logger.Infof("Clean sheetName %s,ssId %s", sheetNum, ssId)
 		}
 	}
 }
@@ -46,14 +45,14 @@ func writeStrList(ssIds []string, sheetNum string, s []string) {
 	var values [][]interface{}
 
 	if len(s) > 0 {
-		header := strings.Split(s[0], service.SheetSplitter)
+		header := strings.Split(s[0], common.SheetSplitter)
 		values = append(values, utils.ConvToISlice(header))
 	} else {
-		logrus.Error("The values list for writing to the sheet is empty.")
+		service.Logger.Error("The values list for writing to the sheet is empty.")
 	}
 
 	for _, line := range s[1:] {
-		datum := strings.Split(line, service.SheetSplitter) //
+		datum := strings.Split(line, common.SheetSplitter) //
 		values = append(values, utils.ConvToISlice(datum))
 	}
 
@@ -67,7 +66,7 @@ func writeStrList(ssIds []string, sheetNum string, s []string) {
 			ValueInputOption("USER_ENTERED").
 			Do()
 		if err != nil {
-			logrus.Errorf("Unable to write data to sheet: %v", err)
+			service.Logger.Errorf("Unable to write data to sheet: %v", err)
 		}
 	}
 }
@@ -84,7 +83,7 @@ func checkAndCreateSheet(ssIds []string, sheetName string) {
 func sheetExists(ssId string, sheetName string) bool {
 	spreadsheet, err := srv.Spreadsheets.Get(ssId).Do()
 	if err != nil {
-		log.Fatalf("Unable to retrieve spreadsheet: %v", err)
+		service.Logger.Fatalf("Unable to retrieve spreadsheet: %v", err)
 	}
 
 	for _, sheet := range spreadsheet.Sheets {
@@ -110,6 +109,6 @@ func createSheet(ssId string, sheetName string) {
 
 	_, err := srv.Spreadsheets.BatchUpdate(ssId, batchUpdateRequest).Do()
 	if err != nil {
-		logrus.Errorf("unable to create sheet: %v", err)
+		service.Logger.Errorf("unable to create sheet: %v", err)
 	}
 }

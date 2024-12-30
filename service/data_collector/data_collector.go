@@ -6,10 +6,10 @@ import (
 
 	"crypto_anomaly_searcher/api"
 	"crypto_anomaly_searcher/api/constants"
+	"crypto_anomaly_searcher/service"
 	"crypto_anomaly_searcher/service/data_collector/dto"
 	"crypto_anomaly_searcher/service/data_handler"
 	"crypto_anomaly_searcher/utils"
-	"github.com/sirupsen/logrus"
 )
 
 type batchTickers [][]string
@@ -38,10 +38,10 @@ func getTickerList() (batchTickers, error) {
 	allTickers := api.GetAllTickers()
 	if len(allTickers) == 0 {
 		error := errors.New("zero tickers in response")
-		logrus.Error(error)
+		service.Logger.Error(error)
 		return nil, error
 	}
-	filteredTickers := tickersFilter(allTickers)[0:2] // todo для дебага, чтобы не запрашивать данные по всем инструментам
+	filteredTickers := tickersFilter(allTickers) // [0:2] // todo для дебага, чтобы не запрашивать данные по всем инструментам
 	var tickers [][]string
 	for start := 0; start < len(filteredTickers); start += 100 {
 		end := start + 100
@@ -81,7 +81,7 @@ func getTickersData(batchTickers batchTickers, period constants.WindowSize) api.
 		// todo воткнуть горутины
 		tickersData := api.GetTickersData(tickers, period)
 		if len(tickersData) != len(tickers) {
-			logrus.Errorf("Error: received an incorrect number of tickers. Expected: %d, Received: %d", len(tickers), len(tickersData))
+			service.Logger.Warnf("Error: received an incorrect number of tickers. Expected: %d, Received: %d", len(tickers), len(tickersData))
 		}
 		for _, tickerData := range tickersData {
 			flatTickerDataList = append(flatTickerDataList, tickerData)
