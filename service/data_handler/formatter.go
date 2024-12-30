@@ -1,8 +1,6 @@
 package data_handler
 
 import (
-	"fmt"
-
 	"crypto_anomaly_searcher/api"
 	"crypto_anomaly_searcher/service/data_collector/dto"
 )
@@ -16,9 +14,9 @@ func StrFmtComputedData(
 	for _, d := range data {
 		res = append(res, computer(d))
 	}
-	for _, re := range res {
-		fmt.Println(re)
-	}
+	// for _, re := range res {
+	// 	fmt.Println(re)
+	// }
 	return res
 }
 

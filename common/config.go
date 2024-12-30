@@ -1,9 +1,9 @@
-package service
+package common
 
 import (
-	"log"
 	"os"
 
+	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 )
 
@@ -20,24 +20,20 @@ type telegramConfig struct {
 }
 
 type sheetConfig struct {
-	Raw       sheetData `yaml:"raw-data"`
-	Computed1 sheetData `yaml:"computed1"`
-}
-
-type sheetData struct {
-	SsIds []string `yaml:"ss-ids"`
+	UpdateTime float32  `yaml:"update-time-min"`
+	SsIds      []string `yaml:"ss-ids"`
 }
 
 func initConfig() ConfigM {
 	file, err := os.Open("config.yml")
 	if err != nil {
-		log.Fatalf("Open file with error: %v", err)
+		logrus.Fatalf("Open file with error: %v", err)
 	}
 	defer file.Close()
 
 	var config ConfigM
 	if err := yaml.NewDecoder(file).Decode(&config); err != nil {
-		log.Fatalf("Decode error YAML: %v", err)
+		logrus.Fatalf("Decode error YAML: %v", err)
 	}
 	file.Close()
 	return config
